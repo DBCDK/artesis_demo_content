@@ -1,0 +1,93 @@
+<?php
+
+/**
+ * Implements hook_install().
+ *
+ * Creates custom nodes.
+ */
+function artesis_demo_content_install() {
+  $nids = array();
+    $nodes = array(
+      array(
+        'title' => 'Biblioteker',
+        'body' => '',
+      ),
+      array(
+        'title' => 'Bøger',
+        'body' => '',
+      ),
+      array(
+        'title' => 'Børn',
+        'body' => '',
+      ),
+      array(
+        'title' => 'Film',
+        'body' => '',
+      ),
+      array(
+        'title' => 'Musik',
+        'body' => '',
+      ),
+      array(
+        'title' => 'Temalister',
+        'body' => '',
+      ),
+    );
+    foreach ($nodes as $node) {
+      $nids[] = _create_node($node['title'], $node['body']);
+    }
+    variable_set('artesis_demo_content_nids', $nids);
+}
+
+
+/**
+ * Implements hook_uninstall().
+ */
+function artesis_demo_content_uninstall() {
+  // Delete all nodes of the type 'dummy_content'.
+  $nids = variable_get('artesis_demo_content_nids', FALSE);
+  foreach ($nids as $nid) {
+    node_delete($nid);
+  }
+  variable_del('artesis_demo_content_nids');
+
+  // Delete the dummy_content node type.
+  node_type_delete('dummy_content');
+}
+
+/**
+ * Create a node of the type 'dummy_content'
+ * With a link to the main-menu
+ *
+ * @param $title String
+ * @param $body String
+ * @return $node->nid Integer
+ */
+function _create_node($title = FALSE, $body = FALSE) {
+  $node = new stdClass();
+  $node->type = 'dummy_content';
+  node_object_prepare($node);
+
+  $node->title    = $title;
+  $node->language = LANGUAGE_NONE;
+
+  $node->body[$node->language][0]['value']   = $body_text;
+  $node->body[$node->language][0]['summary'] = text_summary($body_text);
+  $node->body[$node->language][0]['format']  = 'filtered_html';
+
+  $path = 'content/programmatically_created_node_' . date('YmdHis');
+  $node->path = array('alias' => $path);
+
+  node_save($node);
+
+ // Create a menu entry for our new node.
+  $link = array();
+  $link['menu_name'] = 'main-menu';
+  $link['link_title'] = $node->title;
+  $link['link_path'] = "node/" . $node->nid;
+  $link['options']['attributes']['title'] = $node->title;
+  menu_link_save($link);
+
+  return $node->nid;
+}
+
